@@ -1,0 +1,402 @@
+title: "Cysclistic_bike_share - Final Analysis"
+author: "Cedric S. Casseus"
+date: "2023-10-28"
+output:
+  html_document: default
+---
+
+## Data Source:
+Our analysis relies on twelve separate CSV files, each representing data for a specific month, covering a comprehensive period from October 2022 to September 2023. These files encapsulate invaluable insights into the bike-sharing patterns within Cyclistic.
+
+Data Import and Library Loading:
+The journey commences with the loading of essential R libraries. We leverage powerful tools like tidyverse, lubridate, janitor, forecast, scales, and plotly to equip us with the capabilities required for data management, visualization, and analysis.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(janitor)
+library(forecast)
+library(scales)
+library(plotly)
+library(dplyr)
+library(readr)
+oct_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202210-divvy-tripdata.csv", 
+   col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+nov_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202211-divvy-tripdata.csv", 
+   col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+dec_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202212-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+jan_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202301-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+feb_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202302-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+mar_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202303-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+apr_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202304-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+may_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202305-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+jun_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202306-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+jul_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202307-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+aug_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202308-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+
+sep_tripdata <- read_csv("~/Documents/School/Coursera/Google Analytics/Capstone Project/Case Study 1/data/202309-divvy-tripdata.csv", col_types = readr::cols(
+        ride_id = readr::col_skip(),
+        rideable_type = readr::col_factor(levels = c("classic_bike", "electric_bike", "docked_bike")),
+        started_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        ended_at = readr::col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+        start_station_id = readr::col_skip(),
+        end_station_id = readr::col_skip(),
+        start_lat = readr::col_skip(),
+        start_lng = readr::col_skip(),
+        end_lat = readr::col_skip(),
+        end_lng = readr::col_skip(),
+        member_casual = readr::col_factor(levels = c("member", "casual"))
+    )
+)
+```
+
+## Binding Datasets:
+One of the fundamental requirements for our analysis is to merge all these individual CSV files into a single, consolidated dataset. This unification enhances the manageability and effectiveness of our analysis. The code snippet provided takes care of this crucial task by concatenating the data from all twelve files into a unified dataset, which we'll refer to as bike_rides.
+
+```{r}
+##Binding our imported datasets into 1 for easier analysis
+bike_rides <- rbind(oct_tripdata, nov_tripdata, dec_tripdata, jan_tripdata,
+                    feb_tripdata, mar_tripdata, apr_tripdata, may_tripdata, 
+                    jun_tripdata, jul_tripdata, aug_tripdata, sep_tripdata)
+```
+
+## Adding Columns 
+For Trip Duration:
+In this step, we aim to enhance the dataset by calculating the duration of each bike trip. Understanding the trip duration is vital for our analysis, as it can provide insights into the average time users spend on their rides.
+
+```{r}
+# Calculate trip duration and round it to minutes
+bike_rides$trip_length <- round(difftime(bike_rides$ended_at, bike_rides$started_at, units = "mins"))
+```
+
+Adding a Column for the Day of the Week:
+Analyzing data based on the day of the week can reveal patterns in user behavior. Different days may witness varying levels of bike usage, and understanding these trends can inform business decisions.
+
+```{r} 
+# Extract the day of the week from the trip start date
+bike_rides$trip_day <- weekdays(bike_rides$started_at, abbreviate = TRUE)
+```
+
+Adding Columns for the Hour of the Day:
+Knowing the time of day when bike rides occur is valuable for understanding peak usage hours. This information can be useful for making informed decisions regarding bike availability, maintenance, and promotions.
+
+```{r}
+# Extract the hour of the day for trip start and end
+bike_rides$start_hour <- lubridate::hour(bike_rides$started_at)
+bike_rides$end_hour <- lubridate::hour(bike_rides$ended_at)
+```
+
+### Clearing Empty Cells and Rows:
+This step is crucial to ensure the dataset is free from empty or missing values. Cleaning the data by removing these empty cells and rows is essential to maintain data integrity and prevent any issues during analysis.
+```{r}
+# Remove columns with entirely empty cells
+bike_rides <- janitor::remove_empty(bike_rides, which = "cols")
+
+# Remove rows with empty cells
+bike_rides <- janitor::remove_empty(bike_rides, which = "rows")
+```
+
+Removing All Trip Lengths Under 0 Minutes and Organizing the Data:
+Filtering the data to eliminate trips with negative or zero durations is essential. It ensures that we work with valid and meaningful trip data. This step is critical for accurate analysis.
+```{r}
+# Filter out trips with duration less than or equal to 0
+bike_rides_clean <- dplyr::filter(bike_rides, trip_length > 0)
+```
+
+Removing Data Columns That Will Not Be Used:
+To make the dataset more focused and manageable, it's a good practice to remove columns that are not relevant to the analysis you intend to perform. This streamlines the dataset and reduces unnecessary clutter.
+```{r}
+# Select only the essential columns for analysis
+bike_rides_clean <- bike_rides_clean %>% 
+  select(rideable_type, started_at, ended_at, start_station_name,
+         end_station_name, member_casual, trip_length, trip_day,
+         start_hour, end_hour)
+```
+
+Removing Rows Containing Any Blank Data and Organizing the Cleaned Data:
+To ensure the dataset is devoid of any remaining missing values after the previous cleaning steps, this final data cleaning step removes rows that contain blank data. The resulting dataset is ready for further analysis.
+```{r}
+# Remove rows with missing data
+bike_rides_clean_noblanks <- na.omit(bike_rides_clean)
+``` 
+
+## Exploratory Data Analysis:
+Grouping by member_casual
+In this section, we're grouping the data to gain a deeper understanding of bike-sharing patterns within Cyclistic. We've chosen to group the data by several key factors, including the week, start hour, rideable type, and member type.
+Our interest in statistics like average trip length, median, maximum, and minimum values stems from the need to uncover patterns in user behavior. These statistics can provide insights into typical ride durations and highlight variations in ride lengths.
+
+```{r}
+bike_rides_clean_grouped <- bike_rides_clean_noblanks %>% 
+  group_by(weekly = floor_date(started_at, "week"), start_hour, rideable_type,
+           member_casual, trip_day) %>%
+  summarise(trip_length = mean(trip_length),
+    Minutes = sum(trip_length),
+    Median = median(trip_length),
+    Max = max(trip_length),
+    Min = min(trip_length),
+    Count = n())%>%
+  ungroup()
+```
+
+Organizing a month and a moving average columns
+To detect long-term trends in our data, we've organized the information by month and calculated a moving average. This moving average helps smooth out fluctuations and emphasizes overarching patterns.
+```{r}
+bike_rides_clean_grouped$cntMA <- forecast::ma(bike_rides_clean_grouped$Count, 28)
+bike_rides_clean_grouped$Monthly <- lubridate::month(bike_rides_clean_grouped$weekly,
+                                                     label = TRUE)
+```
+
+Table for the summary of counts
+The summary of counts provides a quick overview of our data. From this summary, we can see that the number of rides can vary significantly between different periods, hinting at potential trends or seasonality. Pay close attention to any extreme values, as they may indicate unusual behavior.
+```{r}
+summary(bike_rides_clean_grouped$Count)
+##  table of counts by HOUR
+xtabs(bike_rides_clean_grouped$Count ~ bike_rides_clean_grouped$start_hour)
+```
+```{r}
+##  table of counts by DAY
+xtabs(bike_rides_clean_grouped$Count ~ bike_rides_clean_grouped$trip_day)
+```
+
+
+### Bar chart by hour of the day and count of rides
+The "Rides by Hour of the Day" bar chart is instrumental in understanding when most rides occur. Peaks in bike rides during specific hours suggest user preferences for certain times of the day. It's worth noting that these patterns may differ between member types, so we'll explore that as well.
+```{r}
+ggplot(bike_rides_clean_grouped, aes(x = start_hour, y = Count, fill = member_casual)) +
+  geom_bar(stat = "identity", alpha = 1) +
+  scale_fill_manual(values = c("orange", "purple")) +
+  labs(title = "Rides by Hour of the Day", x = "Hour of the Day", y = "Count of Rides") +
+  scale_y_continuous(labels = comma) +
+  facet_grid(~ member_casual)
+
+```
+
+### Bar chart by day of the week and count of rides
+```{r}
+ggplot(bike_rides_clean_grouped, aes(x = trip_day, y = Count)) +
+  geom_bar(stat = "identity", aes(fill = member_casual), alpha = 1) +
+  labs(title = "Rides by Day of the Week", x = "Day of the Week", y = "Count of Rides") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_manual(values = c("member" = "orange", "casual" = "purple")) +
+  facet_grid(~ member_casual)
+```
+
+### Bar chart by month and count of rides
+```{r}
+ggplot(bike_rides_clean_grouped, aes(x = Monthly, y = Count)) +
+  geom_bar(stat = "identity", aes(fill = member_casual), alpha = 1) +
+  labs(title = "Rides by Month", x = "Month", y = "Count of Rides") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_manual(values = c("member" = "orange", "casual" = "purple")) +
+  facet_grid(~ member_casual)
+```
+
+
+### Graph of use of rideable types over the months
+Examining the use of different rideable types over various months can reveal seasonal preferences or trends. We'll be able to identify if the choice of rideable type changes throughout the year, possibly due to weather or other factors.
+````{r}
+ggplot(bike_rides_clean_grouped, aes(x = Monthly, y = Count, fill = rideable_type)) +
+  geom_bar(stat = "identity", alpha = 1) +
+  scale_fill_manual(values = c("red", "blue", "green")) +
+  labs(title = "Rides by Month", x = "Month", y = "Count of Rides") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_grid(~ member_casual)
+```
+
+### Graph of member_casual by time of day
+The "Rides by Hour of the Day" chart can shed light on daily bike usage patterns. Understanding the differences between member types at various hours can help us tailor services and promotions to meet the unique needs of each group.
+
+```{r}
+##  Rides by Hour of the Day by Member Type and Rideable Type
+ggplot(bike_rides_clean_grouped, aes(x = start_hour, y = Count, fill = member_casual)) +
+  geom_bar(stat = "identity", alpha = 1) +
+  scale_fill_manual(values = c("orange", "purple")) +
+  labs(title = "Rides by Hour of the Day", x = "Hour of the Day", y = "Count of Rides") +
+  scale_y_continuous(labels = comma) +
+  facet_grid(~ rideable_type + member_casual)
+```
+
+### Graph of member_casual by rideable_type
+By comparing member types by rideable type, we can discern whether different user groups prefer particular types of bikes. This can influence bike allocation and marketing strategies.
+```{r}
+##  Rides by month by Member Type and Rideable Type
+ggplot(bike_rides_clean_grouped, aes(x = Monthly, y = Count, fill = member_casual)) +
+  geom_bar(stat = "identity", alpha = 1) +
+  scale_fill_manual(values = c("orange", "purple")) +
+  labs(title = "Rides by Month", x = "Month", y = "Count of Rides") +
+  scale_y_continuous(labels = comma) +
+  facet_grid(~ rideable_type + member_casual)
+
+##  Rides by Member Type and Rideable Type
+ggplot(bike_rides_clean_grouped, aes(x = member_casual, y = Count, fill = member_casual)) +
+  geom_bar(stat = "identity", alpha = 1) +
+  scale_fill_manual(values = c("orange", "purple")) +
+  labs(title = "Rides by Member Type", x = "Member Type", y = "Count of Rides") +
+  scale_y_continuous(labels = comma) +
+  facet_grid(~ rideable_type)
+```
+
+### Average trip_length by member_casual
+Analyzing average trip length by member type provides insights into how long different users typically ride. This information can influence decisions regarding pricing structures and membership offerings based on user behavior.
+```{r}
+##  Average Trip Length by Member Type
+ggplot(bike_rides_clean_grouped, aes(x = member_casual, y = trip_length, fill = member_casual)) +
+  geom_bar(stat = "identity", alpha = 1) +
+  scale_fill_manual(values = c("orange", "purple")) +
+  labs(title = "Average Trip Length by Member Type", x = "Member Type", y = "Average Trip Length") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_grid(~ rideable_type)
+```
